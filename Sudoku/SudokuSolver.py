@@ -9,15 +9,18 @@ Will use depth first search to check if a square is possible then check the next
 import sys
 import fileinput
 import os
+import time
 
 
 def main():
 	#will eventually have a stream reader to take directory, now hardcoded
 	#sudokuFile = "test1.txt"
-	sudokuFile = "test2easy.txt"
+	sudokuFile = "test1.txt"
 
 	#takes the file location and parses it into an array
+	startTime = time.time()
 	sudokuArray = parseFile(sudokuFile)
+	print "Parse Time: " + str(time.time()-startTime)
 	#do something different if i have printed file does not exist
 	"""
 	print checkCol(8,80,sudokuArray)
@@ -31,7 +34,9 @@ def main():
 	
 
 	#solves the puzzle and stores it into the solvedArray a 1d array of length 81
+	startTime = time.time()
 	solvedArray = sudokuSolver(sudokuArray)
+	print "Solve Time: " + str(time.time()-startTime)
 	#prints the solved Array
 	printResult(solvedArray)
 
@@ -74,7 +79,7 @@ def sudokuSolver(sudokuArray):
 			#try to fit in a number between the current start and 9 inclusive
 			for i in range(currentStart,10):
 				#checks the trial number to see if it passes the three sudoku critera
-				if checkNumber(i, slot, sudokuArray):
+				if checkValidNumber(i, slot, sudokuArray):
 					#if it passes then it is inserted into the array
 					sudokuArray[slot] = i
 					#the insertion is tracked by adding a tuple of the slot and number
@@ -105,11 +110,6 @@ def sudokuSolver(sudokuArray):
 	return sudokuArray
 		
 #Runs checks on the Col, Row, and Square
-def checkNumber(entry, slot, sudokuArray):
-	if not checkValidNumber(entry, slot, sudokuArray):
-		return False
-	else:
-		return True
 def checkValidNumber(current, slot, sudokuArray):
 	#finds the column number of the current slot
 	col = slot % 9
@@ -124,7 +124,7 @@ def checkValidNumber(current, slot, sudokuArray):
 		#checks the current against all numbers in the column
 		if sudokuArray[key] == current:
 			return False
-			#finds all slots that correspond to the same row
+	#finds all slots that correspond to the same row
 	for key in range(slot-col, slot-col+9):
 		#checks current against all numbers in the row
 		if sudokuArray[key] == current:
@@ -136,45 +136,6 @@ def checkValidNumber(current, slot, sudokuArray):
 			if sudokuArray[key] == current:
 				return False
 	return True
-'''
-#checks the trial entry in a particular slot to see if the col crieteria is passed
-def checkCol(entry, slot, sudokuArray):
-	#finds the column number of the current slot
-	col = slot % 9
-	#finds all of the slots that correspond the the same column
-	for key in range(col, len(sudokuArray), 9):
-		#checks the entry against all numbers in the column
-		if sudokuArray[key] == entry:
-			return False
-	return True
-#checks the trial entry in a particular slot to see if the row crieteria is passed	
-def checkRow(entry, slot, sudokuArray):
-	#finds the column number of the current slot
-	col = slot % 9
-	#finds all slots that correspond to the same row
-	for key in range(slot-col, slot-col+9):
-		#checks entry against all numbers in the row
-		if sudokuArray[key] == entry:
-			return False
-	return True
-
-#checks the trial entry in a particular slot to see if the square crieteria is passed
-def checkSquare(entry, slot, sudokuArray):
-	#finds the column and row
-	col = slot % 9
-	row = slot/9
-	#finds whether its the 1st 2nd or 3rd col or row in the square
-	rowMod = row%3
-	colMod = col%3
-	#finds the upper left slot of the square
-	first = slot-colMod-(rowMod*9)
-	for i in range(0,3):
-		*************************BROKEN
-		#checks top row of the square, left col of the square, and diag of square
-		if (sudokuArray[first+i] == entry) or (sudokuArray[first+(i*9)]==entry) or (sudokuArray[first+i+(i*9)]==entry):
-			return False
-	return True
-'''
 
 #Prints the result in two ways, 9 lines of 9 numbers and the array itself
 def printResult(solvedArray):
