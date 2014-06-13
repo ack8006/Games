@@ -1,12 +1,13 @@
 #generates a random sudoku puzzle
 
 import random
+import time
 
 class PuzzleGenerator():
 	sudokuArray = [0]*81
 	possibleEntries = [0]*81
 
-	def generatePuzzle(self):
+	def generateCompleted(self):
 		for x in range(0,81):
 			self.possibleEntries[x]=range(1,10)
 		slot = 0
@@ -28,7 +29,30 @@ class PuzzleGenerator():
 		self.printResult()
 		return self.sudokuArray
 
-	#checks the trial entry in a particular slot to see if the col crieteria is passed
+	#1 is easy, 2 medium, 3 hard, 4 very hard
+	#easy >32, 30-32,28-30,<28
+	#>1 each box, couple with only one given, """", several with no givens
+	#each digit appears at least 3 times, some may only appear twice, 3-4 appear twice 1 once, 
+	#several single digit and most 2-3
+	#http://alwayspuzzling.blogspot.com/2012/12/how-to-judge-difficulty-of-sudoku.html
+	def difficultyGenerator(self, difficulty):
+		#copy array
+		sudokuArrayCopy = []
+		for slot in self.sudokuArray:
+			sudokuArrayCopy.append(slot)
+
+
+	def digHoles(self, slotList, sudokuArrayCopy):
+		previousAltered = []
+		for slot in slotList:
+			previousAltered.append((slot, self.sudokuArray[slot]))
+			self.sudokuArray[slot] = 0
+		if self.uniqueSolution(sudokuArrayCopy) == 1:
+			return True
+		else:
+			return False
+
+	#checks the trial entry in a particular slot to see if the rol, col, and box requirements are met
 	def checkValidNumber(self, current, slot):
 		#finds the column number of the current slot
 		col = slot % 9
@@ -56,6 +80,69 @@ class PuzzleGenerator():
 					return False
 		return True
 
+	#************ Do I need to return solutions or should i just return if greater than 2?
+	#************ Probably Just if Greater than 2 because I'm no going to need the actual solutions
+	#and it will be much faster to run if only looking for 2
+
+	#************Alters the Main Puzzle!!!!
+	def uniqueSolution(self, sudokuArrayCopy):
+		#counts number of valid solutions
+		numberOfSolutions = 0
+		#current index of array
+		slot = 0 
+		#will hold tuple of slot and previously tried number
+		previousAltered = []
+		#boolean to know if made a mistake and need to backtrack
+		goBack = True
+		#variable to track where trial numbers should begin from, important when backtracking
+		currentStart = 1
+		#while program is unfinished
+		while slot < len(sudokuArrayCopy):
+			#if the current slot is blank
+			if sudokuArrayCopy[slot] == 0:
+				#try to fit in a number between the current start and 9 inclusive
+				for i in range(currentStart,10):
+					#checks the trial number to see if it passes the three sudoku critera
+					if self.checkValidNumber(i, slot):
+						#if it passes then it is inserted into the array
+						sudokuArrayCopy[slot] = i
+						if not 0 in sudokuArrayCopy:
+							numberOfSolutions += 1
+							if numberOfSolutions >1:
+								return numberOfSolutions
+							sudokuArrayCopy[slot] = 0
+						else:
+							#the insertion is tracked by adding a tuple of the slot and number
+							# to the previouslyAltered Array
+							previousAltered.append((slot, i))
+							slot +=1
+							currentStart=1
+							#number found that fits, don't need to go back
+							goBack = False
+							#breaks out of the for loop to continue on
+							break
+				#if all numbers have been tried in this slot in the current configuration
+				#then must go back and backtrack
+				if goBack:
+					#last holds the tuple of the most recent addition to the array
+					if len(previousAltered)<=0:
+						return numberOfSolutions
+					else:
+						last = previousAltered.pop()
+						#sets slot to the previously altered slot and set current start to 
+						#one more than the number that was most recently tried in that slot
+						slot = last[0]
+						currentStart = last[1]+1
+						#resets slot to zero
+						sudokuArrayCopy[slot] = 0
+				#if goBack is False, it's reset to true and the loop continues
+				else: goBack = True
+			#if the current slot is not zero go to the next slot
+			else:
+				slot +=1
+		return numberOfSolutions
+
+
 	def printResult(self):
 		line = ""
 		counter = 0
@@ -68,3 +155,87 @@ class PuzzleGenerator():
 				line = str(i)
 				counter = 1
 		print line
+
+#random tests
+	def tester(self, sudokuArrayCopy):
+		sudokuArrayCopy[0]="a"
+		print self.sudokuArray
+		print sudokuArrayCopy
+
+
+def main():
+	#x = PuzzleGenerator()
+	startTime = time.time()
+	#x.generateCompleted()
+	#print "Solve Time: " + str(time.time()-startTime)
+	
+	#Unit Tests
+	startTime = time.time()
+	#singleSolutionCheck()
+	#multipleSolutionCheck()
+	#digHolesCheck()
+	testCase()
+
+	print "Solve Time: " + str(time.time()-startTime)
+
+#Various Unit Tests
+
+#random tests
+def testCase():
+	PuzzleGen = PuzzleGenerator()
+	PuzzleGen.tester(PuzzleGen.sudokuArray)
+
+def singleSolutionCheck():
+	PuzzleGen = PuzzleGenerator()
+	startTime = time.time()
+	sudokuArray = PuzzleGen.generateCompleted()
+	print "Puzzle Gen Time: " + str(time.time()-startTime)
+	for slot in range(0,81):
+		if sudokuArray[slot] == 1:
+			sudokuArray[slot] = 0
+	PuzzleGen.sudokuArray = sudokuArray
+	PuzzleGen.uniqueSolution()
+
+def multipleSolutionCheck():
+	PuzzleGen = PuzzleGenerator()
+	startTime = time.time()
+	sudokuArray = PuzzleGen.generateCompleted()
+	print "Puzzle Gen Time: " + str(time.time()-startTime)
+	for slot in range(0,81):
+		if sudokuArray[slot] == 1 or sudokuArray[slot] == 2 or sudokuArray[slot] == 4:
+			sudokuArray[slot] = 0
+	PuzzleGen.sudokuArray = sudokuArray
+	print PuzzleGen.uniqueSolution()	
+
+def digHolesCheck():
+	PuzzleGen = PuzzleGenerator()
+	sudokuArray = PuzzleGen.generateCompleted()
+	sudokuArrayCopy = []
+	for number in sudokuArray:
+		sudokuArrayCopy.append(number)
+	for x in range(0,80,2):
+		mult = PuzzleGen.digHoles([x, x+1], sudokuArrayCopy)
+		print mult
+		if mult:
+			print PuzzleGen.printResult()
+			print " "
+		else:
+			print PuzzleGen.printResult()
+			print " "
+			break
+
+
+
+if __name__ == "__main__":
+    main()
+
+
+
+
+
+
+
+
+
+
+
