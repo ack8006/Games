@@ -41,15 +41,56 @@ class PuzzleGenerator():
 		for slot in self.sudokuArray:
 			sudokuArrayCopy.append(slot)
 
+	def randomizeDigGlobally(self):
+		#while count less than 5?
+		failureCount = 0
+		while failureCount < 1000:
+			slot = random.randrange(0,41)
+			if self.sudokuArray[slot] != 0:
+				#handle 40 double
+				slotList = []
+				if slot == 40:
+					slotList = [slot]
+				else:
+					slotList = [slot, 80-slot]
+				if not self.digHoles(slotList):
+					failureCount += 1
+				else:
+					failureCount = 0
+			print failureCount
+			self.printResult()
+			print " "
+		self.puzzleStatistics()
 
-	def digHoles(self, slotList, sudokuArrayCopy):
+	def leftToRightTopToBottomDig(self):
+		slot = random.randrange(0,41)
+		count = 0
+		while count <= 40:
+			slotList = []
+			if slot == 40:
+				slotList = [slot]
+			else:
+				slotList = [slot, 80-slot]
+			self.digHoles(slotList)
+			slot += 1
+			count += 1
+			self.printResult()
+			print ""
+		self.puzzleStatistics()
+
+	def digHoles(self, slotList):
 		previousAltered = []
 		for slot in slotList:
 			previousAltered.append((slot, self.sudokuArray[slot]))
 			self.sudokuArray[slot] = 0
+		sudokuArrayCopy = []
+		for number in self.sudokuArray:
+			sudokuArrayCopy.append(number)
 		if self.uniqueSolution(sudokuArrayCopy) == 1:
 			return True
 		else:
+			for item in previousAltered:
+				self.sudokuArray[item[0]] = item[1]
 			return False
 
 	#checks the trial entry in a particular slot to see if the rol, col, and box requirements are met
@@ -142,6 +183,20 @@ class PuzzleGenerator():
 				slot +=1
 		return numberOfSolutions
 
+	def puzzleStatistics(self):
+		self.printResult()
+		count = 0
+		for slot in self.sudokuArray:
+			if slot != 0:
+				count += 1
+		print "Filled Values: " + str(count)
+		#boxes
+		#row, col = 0
+		#while row <3:
+		#	while col < 3:
+		#		box = [0,1,2,9,10,11,18,19,20]
+
+
 
 	def printResult(self):
 		line = ""
@@ -174,7 +229,10 @@ def main():
 	#singleSolutionCheck()
 	#multipleSolutionCheck()
 	#digHolesCheck()
-	testCase()
+	#testCase()
+
+	#randomizeCheck()
+	leftToRightCheck()
 
 	print "Solve Time: " + str(time.time()-startTime)
 
@@ -224,6 +282,15 @@ def digHolesCheck():
 			print " "
 			break
 
+def randomizeCheck():
+	PuzzleGen = PuzzleGenerator()
+	sudokuArray = PuzzleGen.generateCompleted()
+	PuzzleGen.randomizeDigGlobally()
+
+def leftToRightCheck():
+	PuzzleGen = PuzzleGenerator()
+	sudokuArray = PuzzleGen.generateCompleted()
+	PuzzleGen.leftToRightTopToBottomDig()
 
 
 if __name__ == "__main__":
