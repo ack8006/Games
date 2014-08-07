@@ -35,25 +35,19 @@ class PuzzleGenerator():
 	#each digit appears at least 3 times, some may only appear twice, 3-4 appear twice 1 once, 
 	#several single digit and most 2-3
 	#http://alwayspuzzling.blogspot.com/2012/12/how-to-judge-difficulty-of-sudoku.html
-	def difficultyGenerator(self, difficulty):
-		#copy array
-		sudokuArrayCopy = []
-		for slot in self.sudokuArray:
-			sudokuArrayCopy.append(slot)
+	#def difficultyGenerator(self, difficulty):
+	#	#copy array
+	#	sudokuArrayCopy = []
+	#	for slot in self.sudokuArray:
+	#		sudokuArrayCopy.append(slot)
 
 	def randomizeDigGlobally(self):
-		#while count less than 5?
+		#while count less than x?
 		failureCount = 0
-		while failureCount < 1000:
-			slot = random.randrange(0,41)
+		while failureCount < 2:
+			slot = random.randrange(0,80)
 			if self.sudokuArray[slot] != 0:
-				#handle 40 double
-				slotList = []
-				if slot == 40:
-					slotList = [slot]
-				else:
-					slotList = [slot, 80-slot]
-				if not self.digHoles(slotList):
+				if not self.digHoles([slot]):
 					failureCount += 1
 				else:
 					failureCount = 0
@@ -62,21 +56,53 @@ class PuzzleGenerator():
 			print " "
 		self.puzzleStatistics()
 
+	#symmetrical
+	#def randomizeDigGlobally(self):
+	#	#while count less than 5?
+	#	failureCount = 0
+	#	while failureCount < 1000:
+	#		slot = random.randrange(0,41)
+	#		if self.sudokuArray[slot] != 0:
+	#			#handle 40 double
+	#			slotList = []
+	#			if slot == 40:
+	#				slotList = [slot]
+	#			else:
+	#				slotList = [slot, 80-slot]
+	#			if not self.digHoles(slotList):
+	#				failureCount += 1
+	#			else:
+	#				failureCount = 0
+	#		print failureCount
+	#		self.printResult()
+	#		print " "
+	#	self.puzzleStatistics()
+
 	def leftToRightTopToBottomDig(self):
-		slot = random.randrange(0,41)
-		count = 0
-		while count <= 40:
-			slotList = []
-			if slot == 40:
-				slotList = [slot]
-			else:
-				slotList = [slot, 80-slot]
-			self.digHoles(slotList)
+		slot = 0
+		while slot <= 80:
+			self.digHoles([slot])
 			slot += 1
-			count += 1
-			self.printResult()
-			print ""
+			#self.printResult()
+			#print ""
 		self.puzzleStatistics()
+
+	#SYMMETRICAL
+	#def leftToRightTopToBottomDig(self):
+	#	slot = random.randrange(0,41)
+	#	count = 0
+	#	while count <= 40:
+	#		slotList = []
+	#		if slot == 40:
+	#			slotList = [slot]
+	#		else:
+	#			slotList = [slot, 80-slot]
+	#		self.digHoles(slotList)
+	#		slot += 1
+	#		count += 1
+	#		self.printResult()
+	#		print ""
+	#	self.puzzleStatistics()
 
 	def digHoles(self, slotList):
 		previousAltered = []
@@ -108,7 +134,7 @@ class PuzzleGenerator():
 			#checks the current against all numbers in the column
 			if self.sudokuArray[key] == current:
 				return False
-				#finds all slots that correspond to the same row
+		#finds all slots that correspond to the same row
 		for key in range(slot-col, slot-col+9):
 			#checks current against all numbers in the row
 			if self.sudokuArray[key] == current:
@@ -196,8 +222,6 @@ class PuzzleGenerator():
 		#	while col < 3:
 		#		box = [0,1,2,9,10,11,18,19,20]
 
-
-
 	def printResult(self):
 		line = ""
 		counter = 0
@@ -232,7 +256,8 @@ def main():
 	#testCase()
 
 	#randomizeCheck()
-	leftToRightCheck()
+	#leftToRightCheck()
+	randomLeft()
 
 	print "Solve Time: " + str(time.time()-startTime)
 
@@ -291,6 +316,12 @@ def leftToRightCheck():
 	PuzzleGen = PuzzleGenerator()
 	sudokuArray = PuzzleGen.generateCompleted()
 	PuzzleGen.leftToRightTopToBottomDig()
+
+def randomLeft():
+	PuzzleGen = PuzzleGenerator()
+	sudokuArray = PuzzleGen.generateCompleted()
+	PuzzleGen.randomizeDigGlobally()
+	PuzzleGen.leftToRightTopToBottomDig()	
 
 
 if __name__ == "__main__":

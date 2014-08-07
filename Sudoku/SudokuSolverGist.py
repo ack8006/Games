@@ -1,46 +1,27 @@
-#Sudoku Solver
-"""
-This version will take a text file with 9 rows of 9 numbers, or a single row of 81 numbers
-zeros can be considered blank spots.  Spaces and returns are ignored
-Will use depth first search to check if a square is possible then check the next square
-****there should be ways to optimize along the road
-"""
-
-import sys
-import fileinput
+#SudokuSolver
+#Alex Takata
+#7/27/2014
+ 
+#when started, the program will prompt the user for a text file of the sudoku
+#puzzle.  The text file can be formatted either in a continuous string of digits
+#row by row, or in 9 lines.
+#If there is a solution the program will print it.  If there is no solution the program 
+#will state that there is no valid solution and prompt for another file. If
+#there are multiple solution the program will state that and prompt for another
+#file.
+ 
 import os
-import time
-
-
+import sys
+ 
 def main():
-	#will eventually have a stream reader to take directory, now hardcoded
-	#sudokuFile = "test1.txt"
-	sudokuFile = "testFail.txt"
-
-	#takes the file location and parses it into an array
-	startTime = time.time()
-	sudokuArray = parseFile(sudokuFile)
-	print "Parse Time: " + str(time.time()-startTime)
-	#do something different if i have printed file does not exist
-	"""
-	print checkCol(8,80,sudokuArray)
-	print checkRow(8,80,sudokuArray)
-	print checkSquare(8,80,sudokuArray)
-	print checkCol(9,80,sudokuArray)
-	print checkRow(9,80,sudokuArray)
-	print checkSquare(9,80,sudokuArray)
-	print checkValidNumber(9,80,sudokuArray)
-	"""
-	
-
-	#solves the puzzle and stores it into the solvedArray a 1d array of length 81
-	startTime = time.time()
-	solvedArray = sudokuSolver(sudokuArray)
-	print "Solve Time: " + str(time.time()-startTime)
-	#prints the solved Array
-	printResult(solvedArray)
-
-
+	fileName = raw_input('Enter filename: ')
+	#converts text file to array
+	sudokuArray = parseFile(fileName)
+	#attempts to solve sudoku puzzle
+	sudokuArray = sudokuSolver(list(sudokuArray))
+	#if solution, prints solved puzzle
+	printResult(sudokuArray)
+ 
 def parseFile(sudokuFile):
 	#if the file exists
 	if os.path.exists(sudokuFile):
@@ -59,11 +40,17 @@ def parseFile(sudokuFile):
 		if len(sudokuArray) == 81:
 			return sudokuArray
 		else:
-			sys.exit("File Does Not Hold Correct Number of Values")
+			print "File Does Not Hold Correct Number of Values"
+			main()
 	else: 
-		sys.exit("File Does Not Exist")
-
+		print "File Does Not Exist"
+		main()
+ 
 def sudokuSolver(sudokuArray):
+	#stores solved puzzle so sudoku array can be used to check for multiple solutions
+	solvedPuzzle = []
+	#counts number of valid solutions
+	numberOfSolutions = 0
 	#current index of array
 	slot = 0 
 	#will hold tuple of slot and previously tried number
@@ -79,38 +66,62 @@ def sudokuSolver(sudokuArray):
 			#try to fit in a number between the current start and 9 inclusive
 			for i in range(currentStart,10):
 				#checks the trial number to see if it passes the three sudoku critera
-				if checkValidNumber(i, slot, sudokuArray):
+				if checkValidNumber(sudokuArray, i, slot):
 					#if it passes then it is inserted into the array
 					sudokuArray[slot] = i
-					#the insertion is tracked by adding a tuple of the slot and number
-					# to the previouslyAltered Array
-					previousAltered.append((slot, i))
-					slot +=1
-					currentStart=1
-					#number found that fits, don't need to go back
-					goBack = False
-					#breaks out of the for loop to continue on
-					break
+					#if there are no more blank cells
+					if not 0 in sudokuArray:
+						#increment number of solutions
+						numberOfSolutions += 1
+						#if first, store in solved puzzle and move on
+						if numberOfSolutions == 1:
+							solvedPuzzle = list(sudokuArray)
+						#if more than 1 solution exits to main and reports problem
+						elif numberOfSolutions >1:
+							print "Puzzle Has More Than One Solution"
+							main()
+						#program continues to look for solutions by backtracking
+						sudokuArray[slot] = 0
+					else:
+						#the insertion is tracked by adding a tuple of the slot and number
+						# to the previouslyAltered Array
+						previousAltered.append((slot, i))
+						slot +=1
+						currentStart=1
+						#number found that fits, don't need to go back
+						goBack = False
+						#breaks out of the for loop to continue on
+						break
 			#if all numbers have been tried in this slot in the current configuration
 			#then must go back and backtrack
 			if goBack:
 				#last holds the tuple of the most recent addition to the array
-				last = previousAltered.pop()
-				#sets slot to the previously altered slot and set current start to 
-				#one more than the number that was most recently tried in that slot
-				slot = last[0]
-				currentStart = last[1]+1
-				#resets slot to zero
-				sudokuArray[slot] = 0
+				if len(previousAltered)<=0:
+					if numberOfSolutions ==1:
+						print "Puzzle has a unique solution"
+						return solvedPuzzle
+					else: 
+						print "Puzzle has no valid solution"
+						main()
+				else:
+					last = previousAltered.pop()
+					#sets slot to the previously altered slot and set current start to 
+					#one more than the number that was most recently tried in that slot
+					slot = last[0]
+					currentStart = last[1]+1
+					#resets slot to zero
+					sudokuArray[slot] = 0
 			#if goBack is False, it's reset to true and the loop continues
 			else: goBack = True
 		#if the current slot is not zero go to the next slot
 		else:
 			slot +=1
+	print "Puzzle Is Already Solved"
 	return sudokuArray
-		
-#Runs checks on the Col, Row, and Square
-def checkValidNumber(current, slot, sudokuArray):
+ 
+ 
+#checks the trial entry in a particular slot to see if the rol, col, and box requirements are met
+def checkValidNumber(sudokuArray, current, slot):
 	#finds the column number of the current slot
 	col = slot % 9
 	row = slot/9
@@ -124,7 +135,7 @@ def checkValidNumber(current, slot, sudokuArray):
 		#checks the current against all numbers in the column
 		if sudokuArray[key] == current:
 			return False
-	#finds all slots that correspond to the same row
+			#finds all slots that correspond to the same row
 	for key in range(slot-col, slot-col+9):
 		#checks current against all numbers in the row
 		if sudokuArray[key] == current:
@@ -136,8 +147,7 @@ def checkValidNumber(current, slot, sudokuArray):
 			if sudokuArray[key] == current:
 				return False
 	return True
-
-#Prints the result in two ways, 9 lines of 9 numbers and the array itself
+ 
 def printResult(solvedArray):
 	line = ""
 	counter = 0
@@ -150,30 +160,7 @@ def printResult(solvedArray):
 			line = str(i)
 			counter = 1
 	print line
-	print solvedArray
-
+ 
+ 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
