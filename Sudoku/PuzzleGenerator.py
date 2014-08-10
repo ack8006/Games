@@ -6,46 +6,138 @@ import cProfile
 
 class PuzzleGenerator():
 	sudokuArray = [0]*81
-	possibleEntries = [0]*81
 
 	def generateCompleted(self):
+		possibleEntries = [0]*81
 		for x in range(0,81):
-			self.possibleEntries[x]=range(1,10)
+			possibleEntries[x]=range(1,10)
 		slot = 0
 		while slot < len(self.sudokuArray):
 			#random number from possible entries
-			if (len(self.possibleEntries[slot]) > 0):
-				current = self.possibleEntries[slot][random.randrange(0,len(self.possibleEntries[slot]))]
+			if (len(possibleEntries[slot]) > 0):
+				current = possibleEntries[slot][random.randrange(0,len(possibleEntries[slot]))]
 				if self.checkValidNumber(current,slot, self.sudokuArray):
 					self.sudokuArray[slot]=current
 					slot += 1
 				else:
-					self.possibleEntries[slot].remove(current)
+					possibleEntries[slot].remove(current)
 			else:
-				self.possibleEntries[slot]=range(1,10)
+				possibleEntries[slot]=range(1,10)
 				slot -= 1
 				current = self.sudokuArray[slot]
-				self.possibleEntries[slot].remove(current)
+				possibleEntries[slot].remove(current)
 				self.sudokuArray[slot] = 0
 		self.printResult()
 		return self.sudokuArray
 
-	#1 is easy, 2 medium, 3 hard, 4 very hard
-	#easy >32, 30-32,28-30,<28
-	#>1 each box, couple with only one given, """", several with no givens
-	#each digit appears at least 3 times, some may only appear twice, 3-4 appear twice 1 once, 
-	#several single digit and most 2-3
-	#http://alwayspuzzling.blogspot.com/2012/12/how-to-judge-difficulty-of-sudoku.html
-	#def difficultyGenerator(self, difficulty):
-	#	#copy array
-	#	sudokuArrayCopy = []
-	#	for slot in self.sudokuArray:
-	#		sudokuArrayCopy.append(slot)
+	#checks the trial entry in a particular slot to see if the rol, col, and box requirements are met
+	def checkValidNumber(self, current, slot, sudokuArrayCopy):
+		#finds the column number of the current slot
+		col = slot % 9
+		row = slot/9
+		#finds whether its the 1st 2nd or 3rd col or row in the square
+		rowMod = row%3
+		colMod = col%3
+		#finds the upper left slot of the square
+		first = slot-colMod-(rowMod*9)
+		#finds all of the slots that correspond the the same column
+		for key in range(col, len(sudokuArrayCopy), 9):
+			#checks the current against all numbers in the column
+			if sudokuArrayCopy[key] == current:
+				return False
+		#finds all slots that correspond to the same row
+		for key in range(slot-col, slot-col+9):
+			#checks current against all numbers in the row
+			if sudokuArrayCopy[key] == current:
+				return False
+		#checks square
+		for i in range(0,3):
+			for j in range(0,3):
+				key = first+j+(i*9)
+				if sudokuArrayCopy[key] == current:
+					return False
+		return True
+
+	#************no longer Alters the Main Puzzle!!!!
+	def uniqueSolution(self, sudokuArrayCopy):
+		
+		#******
+		startTime = time.time()
+
+
+		#counts number of valid solutions
+		numberOfSolutions = 0
+		#current index of array
+		slot = 0 
+		#will hold tuple of slot and previously tried number
+		previousAltered = []
+		#boolean to know if made a mistake and need to backtrack
+		goBack = True
+		#variable to track where trial numbers should begin from, important when backtracking
+		currentStart = 1
+		#while program is unfinished
+		while slot < len(sudokuArrayCopy):
+			#if the current slot is blank
+			if sudokuArrayCopy[slot] == 0:
+				#try to fit in a number between the current start and 9 inclusive
+				for i in range(currentStart,10):
+					#checks the trial number to see if it passes the three sudoku critera
+					if self.checkValidNumber(i, slot, sudokuArrayCopy):
+						#if it passes then it is inserted into the array
+						sudokuArrayCopy[slot] = i
+						if not 0 in sudokuArrayCopy:
+							numberOfSolutions += 1
+							if numberOfSolutions >1:
+								print "checkOver1"
+								#**********trial 
+								sudokuArrayCopy = []
+								print "UniqueSolution Time: " + str(time.time()-startTime)
+								return numberOfSolutions
+							sudokuArrayCopy[slot] = 0
+						else:
+							#the insertion is tracked by adding a tuple of the slot and number
+							# to the previouslyAltered Array
+							previousAltered.append((slot, i))
+							slot +=1
+							currentStart=1
+							#number found that fits, don't need to go back
+							goBack = False
+							#breaks out of the for loop to continue on
+							break
+				#if all numbers have been tried in this slot in the current configuration
+				#then must go back and backtrack
+				if goBack:
+					#last holds the tuple of the most recent addition to the array
+					if len(previousAltered)<=0:
+						print "check1"
+						#**********trial 
+						sudokuArrayCopy = []
+						print "UniqueSolution Time: " + str(time.time()-startTime)
+						return numberOfSolutions
+					else:
+						last = previousAltered.pop()
+						#sets slot to the previously altered slot and set current start to 
+						#one more than the number that was most recently tried in that slot
+						slot = last[0]
+						currentStart = last[1]+1
+						#resets slot to zero
+						sudokuArrayCopy[slot] = 0
+				#if goBack is False, it's reset to true and the loop continues
+				else: goBack = True
+			#if the current slot is not zero go to the next slot
+			else:
+				slot +=1
+		print "check3"
+
+		print "UniqueSolution Time: " + str(time.time()-startTime)
+
+
+		return numberOfSolutions
 
 	def randomizeDigGlobally(self):
 		#while count less than x?
 		failureCount = 0
-		while failureCount < 2:
+		while failureCount < 5:
 			slot = random.randrange(0,80)
 			if self.sudokuArray[slot] != 0:
 				if not self.digHoles([slot]):
@@ -61,7 +153,7 @@ class PuzzleGenerator():
 	#def randomizeDigGlobally(self):
 	#	#while count less than 5?
 	#	failureCount = 0
-	#	while failureCount < 1000:
+	#	while failureCount < 4:
 	#		slot = random.randrange(0,41)
 	#		if self.sudokuArray[slot] != 0:
 	#			#handle 40 double
@@ -122,98 +214,7 @@ class PuzzleGenerator():
 				self.sudokuArray[item[0]] = item[1]
 			return False
 
-	#checks the trial entry in a particular slot to see if the rol, col, and box requirements are met
-	def checkValidNumber(self, current, slot, sudokuArrayCopy):
-		#finds the column number of the current slot
-		col = slot % 9
-		row = slot/9
-		#finds whether its the 1st 2nd or 3rd col or row in the square
-		rowMod = row%3
-		colMod = col%3
-		#finds the upper left slot of the square
-		first = slot-colMod-(rowMod*9)
-		#finds all of the slots that correspond the the same column
-		for key in range(col, len(self.sudokuArray), 9):
-			#checks the current against all numbers in the column
-			if sudokuArrayCopy[key] == current:
-				return False
-		#finds all slots that correspond to the same row
-		for key in range(slot-col, slot-col+9):
-			#checks current against all numbers in the row
-			if sudokuArrayCopy[key] == current:
-				return False
-		#checks square
-		for i in range(0,3):
-			for j in range(0,3):
-				key = first+j+(i*9)
-				if self.sudokuArray[key] == current:
-					return False
-		return True
-
-	#************ Do I need to return solutions or should i just return if greater than 2?
-	#************ Probably Just if Greater than 2 because I'm no going to need the actual solutions
-	#and it will be much faster to run if only looking for 2
-
-	#************no longer Alters the Main Puzzle!!!!
-	def uniqueSolution(self, sudokuArrayCopy):
-		#counts number of valid solutions
-		numberOfSolutions = 0
-		#current index of array
-		slot = 0 
-		#will hold tuple of slot and previously tried number
-		previousAltered = []
-		#boolean to know if made a mistake and need to backtrack
-		goBack = True
-		#variable to track where trial numbers should begin from, important when backtracking
-		currentStart = 1
-		#while program is unfinished
-		while slot < len(sudokuArrayCopy):
-			#if the current slot is blank
-			if sudokuArrayCopy[slot] == 0:
-				#try to fit in a number between the current start and 9 inclusive
-				for i in range(currentStart,10):
-					#checks the trial number to see if it passes the three sudoku critera
-					if self.checkValidNumber(i, slot, sudokuArrayCopy):
-						#if it passes then it is inserted into the array
-						sudokuArrayCopy[slot] = i
-						if not 0 in sudokuArrayCopy:
-							numberOfSolutions += 1
-							if numberOfSolutions >1:
-								print "checkOver1"
-								return numberOfSolutions
-							sudokuArrayCopy[slot] = 0
-						else:
-							#the insertion is tracked by adding a tuple of the slot and number
-							# to the previouslyAltered Array
-							previousAltered.append((slot, i))
-							slot +=1
-							currentStart=1
-							#number found that fits, don't need to go back
-							goBack = False
-							#breaks out of the for loop to continue on
-							break
-				#if all numbers have been tried in this slot in the current configuration
-				#then must go back and backtrack
-				if goBack:
-					#last holds the tuple of the most recent addition to the array
-					if len(previousAltered)<=0:
-						print "check1"
-						return numberOfSolutions
-					else:
-						last = previousAltered.pop()
-						#sets slot to the previously altered slot and set current start to 
-						#one more than the number that was most recently tried in that slot
-						slot = last[0]
-						currentStart = last[1]+1
-						#resets slot to zero
-						sudokuArrayCopy[slot] = 0
-				#if goBack is False, it's reset to true and the loop continues
-				else: goBack = True
-			#if the current slot is not zero go to the next slot
-			else:
-				slot +=1
-		print "check3"
-		return numberOfSolutions
+	
 
 	def puzzleStatistics(self):
 		self.printResult()
@@ -255,15 +256,14 @@ def main():
 	#print "Solve Time: " + str(time.time()-startTime)
 	
 	#Unit Tests
-	startTime = time.time()
 	#singleSolutionCheck()
 	#multipleSolutionCheck()
 	#multipleSolutionCheck2()
 	#digHolesCheck()
 	#testCase()
 
-	randomizeCheck()
-	#leftToRightCheck()
+	#randomizeCheck()
+	leftToRightCheck()
 	#randomLeft()
 
 	print "Solve Time: " + str(time.time()-startTime)
