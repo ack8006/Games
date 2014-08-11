@@ -12,7 +12,7 @@ class PuzzleGenerator():
 		for x in range(0,81):
 			possibleEntries[x]=range(1,10)
 		slot = 0
-		while slot < len(self.sudokuArray):
+		while slot < 81:
 			#random number from possible entries
 			if (len(possibleEntries[slot]) > 0):
 				current = possibleEntries[slot][random.randrange(0,len(possibleEntries[slot]))]
@@ -41,7 +41,7 @@ class PuzzleGenerator():
 		#finds the upper left slot of the square
 		first = slot-colMod-(rowMod*9)
 		#finds all of the slots that correspond the the same column
-		for key in range(col, len(sudokuArrayCopy), 9):
+		for key in range(col, 81, 9):
 			#checks the current against all numbers in the column
 			if sudokuArrayCopy[key] == current:
 				return False
@@ -60,11 +60,6 @@ class PuzzleGenerator():
 
 	#************no longer Alters the Main Puzzle!!!!
 	def uniqueSolution(self, sudokuArrayCopy):
-		
-		#******
-		startTime = time.time()
-
-
 		#counts number of valid solutions
 		numberOfSolutions = 0
 		#current index of array
@@ -76,7 +71,7 @@ class PuzzleGenerator():
 		#variable to track where trial numbers should begin from, important when backtracking
 		currentStart = 1
 		#while program is unfinished
-		while slot < len(sudokuArrayCopy):
+		while slot < 81:
 			#if the current slot is blank
 			if sudokuArrayCopy[slot] == 0:
 				#try to fit in a number between the current start and 9 inclusive
@@ -88,10 +83,8 @@ class PuzzleGenerator():
 						if not 0 in sudokuArrayCopy:
 							numberOfSolutions += 1
 							if numberOfSolutions >1:
-								print "checkOver1"
 								#**********trial 
 								sudokuArrayCopy = []
-								print "UniqueSolution Time: " + str(time.time()-startTime)
 								return numberOfSolutions
 							sudokuArrayCopy[slot] = 0
 						else:
@@ -109,10 +102,8 @@ class PuzzleGenerator():
 				if goBack:
 					#last holds the tuple of the most recent addition to the array
 					if len(previousAltered)<=0:
-						print "check1"
 						#**********trial 
 						sudokuArrayCopy = []
-						print "UniqueSolution Time: " + str(time.time()-startTime)
 						return numberOfSolutions
 					else:
 						last = previousAltered.pop()
@@ -127,17 +118,12 @@ class PuzzleGenerator():
 			#if the current slot is not zero go to the next slot
 			else:
 				slot +=1
-		print "check3"
-
-		print "UniqueSolution Time: " + str(time.time()-startTime)
-
-
 		return numberOfSolutions
 
 	def randomizeDigGlobally(self):
 		#while count less than x?
 		failureCount = 0
-		while failureCount < 5:
+		while failureCount < 3:
 			slot = random.randrange(0,80)
 			if self.sudokuArray[slot] != 0:
 				if not self.digHoles([slot]):
@@ -215,7 +201,6 @@ class PuzzleGenerator():
 			return False
 
 	
-
 	def puzzleStatistics(self):
 		self.printResult()
 		count = 0
@@ -258,13 +243,12 @@ def main():
 	#Unit Tests
 	#singleSolutionCheck()
 	#multipleSolutionCheck()
-	#multipleSolutionCheck2()
 	#digHolesCheck()
 	#testCase()
 
 	#randomizeCheck()
-	leftToRightCheck()
-	#randomLeft()
+	#leftToRightCheck()
+	randomLeft()
 
 	print "Solve Time: " + str(time.time()-startTime)
 
@@ -296,19 +280,6 @@ def multipleSolutionCheck():
 		if sudokuArray[slot] == 1 or sudokuArray[slot] == 2 or sudokuArray[slot] == 4:
 			sudokuArray[slot] = 0
 	print PuzzleGen.uniqueSolution(sudokuArray)	
-
-#****
-def multipleSolutionCheck2():
-	PuzzleGen = PuzzleGenerator()
-	startTime = time.time()
-	puzzle = "420001093053720800861503704508309072040100938700286401370608240100970065296435107"
-	sudokuArray = []
-	while len(puzzle) >0:
-		sudokuArray.append(int(puzzle[0]))
-		puzzle = puzzle[1:]
-	print sudokuArray
-	PuzzleGen.sudokuArray = sudokuArray
-	print PuzzleGen.uniqueSolution(sudokuArray)
 
 def digHolesCheck():
 	PuzzleGen = PuzzleGenerator()
