@@ -9,8 +9,8 @@ class PuzzleGenerator():
 
 	def generateCompleted(self):
 		possibleEntries = [0]*81
-		for x in range(0,81):
-			possibleEntries[x]=range(1,10)
+		for x in list(xrange(0,81)):
+			possibleEntries[x]=list(xrange(1,10))
 		slot = 0
 		while slot < 81:
 			#random number from possible entries
@@ -22,7 +22,7 @@ class PuzzleGenerator():
 				else:
 					possibleEntries[slot].remove(current)
 			else:
-				possibleEntries[slot]=range(1,10)
+				possibleEntries[slot]=list(xrange(1,10))
 				slot -= 1
 				current = self.sudokuArray[slot]
 				possibleEntries[slot].remove(current)
@@ -41,18 +41,18 @@ class PuzzleGenerator():
 		#finds the upper left slot of the square
 		first = slot-colMod-(rowMod*9)
 		#finds all of the slots that correspond the the same column
-		for key in range(col, 81, 9):
+		for key in list(xrange(col, 81, 9)):
 			#checks the current against all numbers in the column
 			if sudokuArrayCopy[key] == current:
 				return False
 		#finds all slots that correspond to the same row
-		for key in range(slot-col, slot-col+9):
+		for key in list(xrange(slot-col, slot-col+9)):
 			#checks current against all numbers in the row
 			if sudokuArrayCopy[key] == current:
 				return False
 		#checks square
-		for i in range(0,3):
-			for j in range(0,3):
+		for i in list(xrange(0,3)):
+			for j in list(xrange(0,3)):
 				key = first+j+(i*9)
 				if sudokuArrayCopy[key] == current:
 					return False
@@ -75,7 +75,7 @@ class PuzzleGenerator():
 			#if the current slot is blank
 			if sudokuArrayCopy[slot] == 0:
 				#try to fit in a number between the current start and 9 inclusive
-				for i in range(currentStart,10):
+				for i in list(xrange(currentStart,10)):
 					#checks the trial number to see if it passes the three sudoku critera
 					if self.checkValidNumber(i, slot, sudokuArrayCopy):
 						#if it passes then it is inserted into the array
@@ -160,10 +160,12 @@ class PuzzleGenerator():
 	def leftToRightTopToBottomDig(self):
 		slot = 0
 		while slot <= 80:
-			self.digHoles([slot])
-			slot += 1
-			#self.printResult()
-			#print ""
+			if self.sudokuArray[slot] != 0:
+				print "not 0"
+				self.digHoles([slot])
+				slot += 1
+				#self.printResult()
+				#print ""
 		self.puzzleStatistics()
 
 	#SYMMETRICAL
@@ -264,7 +266,7 @@ def singleSolutionCheck():
 	startTime = time.time()
 	sudokuArray = PuzzleGen.generateCompleted()
 	print "Puzzle Gen Time: " + str(time.time()-startTime)
-	for slot in range(0,81):
+	for slot in list(xrange(0,81)):
 		if sudokuArray[slot] == 1:
 			sudokuArray[slot] = 0
 	PuzzleGen.sudokuArray = sudokuArray
@@ -276,7 +278,7 @@ def multipleSolutionCheck():
 	startTime = time.time()
 	sudokuArray = PuzzleGen.generateCompleted()
 	print "Puzzle Gen Time: " + str(time.time()-startTime)
-	for slot in range(0,81):
+	for slot in list(xrange(0,81)):
 		if sudokuArray[slot] == 1 or sudokuArray[slot] == 2 or sudokuArray[slot] == 4:
 			sudokuArray[slot] = 0
 	print PuzzleGen.uniqueSolution(sudokuArray)	
@@ -287,7 +289,7 @@ def digHolesCheck():
 	sudokuArrayCopy = []
 	for number in sudokuArray:
 		sudokuArrayCopy.append(number)
-	for x in range(0,80,2):
+	for x in list(xrange(0,80,2)):
 		mult = PuzzleGen.digHoles([x, x+1], sudokuArrayCopy)
 		print mult
 		if mult:
