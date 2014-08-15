@@ -50,7 +50,7 @@ class PuzzleGenerator():
 			#checks current against all numbers in the row
 			if sudokuArrayCopy[key] == current:
 				return False
-		#checks square
+		#checks square lower 4 square
 		for i in xrange(0,3):
 			for j in xrange(0,3):
 				key = first+j+(i*9)
@@ -123,7 +123,7 @@ class PuzzleGenerator():
 	def randomizeDigGlobally(self):
 		#while count less than x?
 		failureCount = 0
-		while failureCount < 7:
+		while failureCount < 1:
 			slot = random.randrange(0,80)
 			if self.sudokuArray[slot] != 0:
 				if not self.digHoles([slot]):
@@ -158,16 +158,18 @@ class PuzzleGenerator():
 	#	self.puzzleStatistics()
 
 	def leftToRightTopToBottomDig(self):
-		slot = 0
-		while slot <= 80:
+		slot = 80
+		print "0"
+		while slot >= 0:
+			print "1"
 			if self.sudokuArray[slot] != 0:
 				startTime = time.time()
 				print "not 0"
 				self.digHoles([slot])
-				slot += 1
 				#self.printResult()
 				#print ""
 				print "Solve Time: " + str(time.time()-startTime)
+			slot -= 1
 		self.puzzleStatistics()
 
 	#SYMMETRICAL
