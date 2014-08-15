@@ -60,10 +60,26 @@ class PuzzleGenerator():
 
 	#************no longer Alters the Main Puzzle!!!!
 	def uniqueSolution(self, sudokuArrayCopy):
+		#for speed will start in the most crowded half of the puzzle 
+		topCount = 0
+		bottomCount = 0
+		slot = 0
+		for slot in xrange(0,80):
+			if slot < 40 and sudokuArrayCopy[slot] != 0:
+				topCount += 1
+			elif slot > 40 and sudokuArrayCopy[slot] != 0:
+				bottomCount += 1
+
+		sideOperator = 0
+		if topCount >= bottomCount:
+			slot = 0
+			sideOperator = 1
+		else:
+			slot = 80
+			sideOperator = -1
+
 		#counts number of valid solutions
 		numberOfSolutions = 0
-		#current index of array
-		slot = 0 
 		#will hold tuple of slot and previously tried number
 		previousAltered = []
 		#boolean to know if made a mistake and need to backtrack
@@ -71,7 +87,7 @@ class PuzzleGenerator():
 		#variable to track where trial numbers should begin from, important when backtracking
 		currentStart = 1
 		#while program is unfinished
-		while slot < 81:
+		while slot < 81 and slot >=0:
 			#if the current slot is blank
 			if sudokuArrayCopy[slot] == 0:
 				#try to fit in a number between the current start and 9 inclusive
@@ -91,7 +107,7 @@ class PuzzleGenerator():
 							#the insertion is tracked by adding a tuple of the slot and number
 							# to the previouslyAltered Array
 							previousAltered.append((slot, i))
-							slot +=1
+							slot += sideOperator
 							currentStart=1
 							#number found that fits, don't need to go back
 							goBack = False
@@ -117,7 +133,7 @@ class PuzzleGenerator():
 				else: goBack = True
 			#if the current slot is not zero go to the next slot
 			else:
-				slot +=1
+				slot +=sideOperator
 		return numberOfSolutions
 
 	def randomizeDigGlobally(self):
@@ -135,59 +151,33 @@ class PuzzleGenerator():
 			print " "
 		self.puzzleStatistics()
 
-	#symmetrical
-	#def randomizeDigGlobally(self):
-	#	#while count less than 5?
-	#	failureCount = 0
-	#	while failureCount < 4:
-	#		slot = random.randrange(0,41)
-	#		if self.sudokuArray[slot] != 0:
-	#			#handle 40 double
-	#			slotList = []
-	#			if slot == 40:
-	#				slotList = [slot]
-	#			else:
-	#				slotList = [slot, 80-slot]
-	#			if not self.digHoles(slotList):
-	#				failureCount += 1
-	#			else:
-	#				failureCount = 0
-	#		print failureCount
-	#		self.printResult()
-	#		print " "
-	#	self.puzzleStatistics()
-
-	def leftToRightTopToBottomDig(self):
-		slot = 80
-		print "0"
-		while slot >= 0:
-			print "1"
+	def jumpOneSlot(self, oddEven):
+		print "Jump One Slot"
+		slot = oddEven
+		while slot < 81:
 			if self.sudokuArray[slot] != 0:
 				startTime = time.time()
-				print "not 0"
 				self.digHoles([slot])
 				#self.printResult()
 				#print ""
 				print "Solve Time: " + str(time.time()-startTime)
-			slot -= 1
-		self.puzzleStatistics()
+			slot += 2
+		self.puzzleStatistics()	
 
-	#SYMMETRICAL
-	#def leftToRightTopToBottomDig(self):
-	#	slot = random.randrange(0,41)
-	#	count = 0
-	#	while count <= 40:
-	#		slotList = []
-	#		if slot == 40:
-	#			slotList = [slot]
-	#		else:
-	#			slotList = [slot, 80-slot]
-	#		self.digHoles(slotList)
-	#		slot += 1
-	#		count += 1
-	#		self.printResult()
-	#		print ""
-	#	self.puzzleStatistics()
+
+	def leftToRightTopToBottomDig(self):
+		slot = 0
+		print "0"
+		while slot < 81:
+			print "1"
+			if self.sudokuArray[slot] != 0:
+				startTime = time.time()
+				self.digHoles([slot])
+				#self.printResult()
+				#print ""
+				print "Solve Time: " + str(time.time()-startTime)
+			slot += 1
+		self.puzzleStatistics()
 
 	def digHoles(self, slotList):
 		previousAltered = []
@@ -253,7 +243,9 @@ def main():
 	#testCase()
 
 	#randomizeCheck()
-	leftToRightCheck()
+	jumpOneSlotCheck()
+	#leftToRightCheck()
+	#jumpLeftCheck()
 	#randomLeft()
 
 	print "Solve Time: " + str(time.time()-startTime)
@@ -308,6 +300,18 @@ def randomizeCheck():
 	PuzzleGen = PuzzleGenerator()
 	sudokuArray = PuzzleGen.generateCompleted()
 	PuzzleGen.randomizeDigGlobally()
+
+def jumpOneSlotCheck():
+	PuzzleGen = PuzzleGenerator()
+	sudokuArray = PuzzleGen.generateCompleted()
+	PuzzleGen.jumpOneSlot(0)
+	PuzzleGen.jumpOneSlot(1)
+
+def jumpLeftCheck():
+	PuzzleGen = PuzzleGenerator()
+	sudokuArray = PuzzleGen.generateCompleted()
+	PuzzleGen.jumpOneSlot(0)
+	PuzzleGen.leftToRightTopToBottomDig()	
 
 def leftToRightCheck():
 	PuzzleGen = PuzzleGenerator()
