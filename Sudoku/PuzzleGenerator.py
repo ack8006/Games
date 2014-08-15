@@ -123,7 +123,7 @@ class PuzzleGenerator():
 	def randomizeDigGlobally(self):
 		#while count less than x?
 		failureCount = 0
-		while failureCount < 3:
+		while failureCount < 7:
 			slot = random.randrange(0,80)
 			if self.sudokuArray[slot] != 0:
 				if not self.digHoles([slot]):
@@ -161,11 +161,13 @@ class PuzzleGenerator():
 		slot = 0
 		while slot <= 80:
 			if self.sudokuArray[slot] != 0:
+				startTime = time.time()
 				print "not 0"
 				self.digHoles([slot])
 				slot += 1
 				#self.printResult()
 				#print ""
+				print "Solve Time: " + str(time.time()-startTime)
 		self.puzzleStatistics()
 
 	#SYMMETRICAL
@@ -249,8 +251,8 @@ def main():
 	#testCase()
 
 	#randomizeCheck()
-	#leftToRightCheck()
-	randomLeft()
+	leftToRightCheck()
+	#randomLeft()
 
 	print "Solve Time: " + str(time.time()-startTime)
 
