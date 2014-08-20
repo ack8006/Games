@@ -144,7 +144,7 @@ class PuzzleGenerator():
 	def randomizeDigGlobally(self):
 		#while count less than x?
 		failureCount = 0
-		while failureCount < 1:
+		while failureCount < 2:
 			slot = random.randrange(0,80)
 			if self.sudokuArray[slot] != 0:
 				if not self.digHoles([slot]):
@@ -213,7 +213,7 @@ class PuzzleGenerator():
 		print self.difficultyOrderOfOperations(sudokuArrayCopy, slotPossibilities)
 		print "findDifficulty Time: " + str(time.time()-startTime)
 
-
+		
 	#****************debating whether or not to pursue this method recursively or with
 	#a loop.  thinking a loop as i will be able to avoid passing the difficultly level
 
@@ -249,6 +249,15 @@ class PuzzleGenerator():
 
 			#DIFFICULTY LEVEL 1 SOLUTIONS
 			print "level 1"
+
+			#*****
+			line = ""
+			counter = 0
+			for i in sudokuArrayCopy:
+				line = line + str(i)
+				counter +=1
+			print line
+							
 			result = self.hiddenSingles(sudokuArrayCopy, slotPossibilities)
 			if result[0] == True:
 				sudokuArrayCopy = result[1]
@@ -256,7 +265,14 @@ class PuzzleGenerator():
 				slotPossibilities = self.findPossibilities(sudokuArrayCopy, slotPossibilities)
 				continue
 
-		print sudokuArrayCopy
+		#*****
+		line = ""
+		counter = 0
+		for i in sudokuArrayCopy:
+			line = line + str(i)
+			counter +=1
+		print line
+
 		return highestDifficulty
 
 	#do this by going through on cells that have a number, remove as a possibility from all in
@@ -300,42 +316,45 @@ class PuzzleGenerator():
 		#have array of ones found and slot, if found second time remove
 		flag = False
 		for section in xrange(0,9):
-			colSingles = []
-			rowSingles = []
-			squareSingles = []
+			print "section: " + str(section)
+			#occurances of a possibility
+			colSingles = [0]*9
+			rowSingles = [0]*9
+			squareSingles = [0]*9
 			#squares left to right then top to bottom
 			first = (section%3)*3 + (section/3)*27
 
 			for key in xrange(0,9):
 				#column
 				for possibility in slotPossibilities[section+(key*9)]:
-					if possibility not in colSingles:
-						colSingles.append(possibility)
-					else:
-						colSingles.remove(possibility)
+					colSingles[possibility-1] = colSingles[possibility-1] + 1
 				#row
 				for possibility in slotPossibilities[(section*9) + key]:
-					if possibility not in rowSingles:
-						rowSingles.append(possibility)
-					else:
-						rowSingles.remove(possibility)
+					rowSingles[possibility-1] = rowSingles[possibility-1] + 1
 				#squares left to right then top to bottom
 				for possibility in slotPossibilities[first+(key%3)+((key/3*9))]:
-					if possibility not in squareSingles:
-						squareSingles.append(possibility)
-					else:
-						squareSingles.remove(possibility)
-			if len(colSingles) > 0:
-				print slotPossibilities
+					squareSingles[possibility-1] = squareSingles[possibility-1] + 1
+			#if any possibility occurs once in the column
+			if 1 in colSingles:
 				print "colSingles"
 				print colSingles
 				flag = True
-				for single in colSingles:
+				possibilities =[i for i, x in enumerate(colSingles) if x == 1]
+				print "possilbiites: " + str(possibilities)
+				for possibility in possibilities:
 					for key in xrange(0,9):
-						if single in slotPossibilities[section+(key*9)]:
+						if possibility+1 in slotPossibilities[section+(key*9)]:
 							print section+(key*9)
-							print single
-							sudokuArrayCopy[section+(key*9)] = single
+							print str(possibility+1)
+							sudokuArrayCopy[section+(key*9)] = possibility+1
+							print sudokuArrayCopy
+							#*****
+							line = ""
+							counter = 0
+							for i in sudokuArrayCopy:
+								line = line + str(i)
+								counter +=1
+							print line
 			line = ""
 			counter = 0
 			for i in self.sudokuArray:
@@ -347,30 +366,53 @@ class PuzzleGenerator():
 					line = str(i)
 					counter = 1
 			print line
+			print " "
+			self.printResult()
 
-			if len(rowSingles) > 0:
+			if 1 in rowSingles:
+				print slotPossibilities
 				print "rowSingles"
 				print rowSingles
 				flag = True
-				for single in rowSingles:
+				possibilities =[i for i, x in enumerate(rowSingles) if x == 1]
+				print "possilbiites: " + str(possibilities)
+				for possibility in possibilities:
 					for key in xrange(0,9):
-						if single in slotPossibilities[(section*9) + key]:
-							print (section*9) + key
-							print single
-							sudokuArrayCopy[(section*9) + key] = single
-			if len(squareSingles) > 0:
+						if possibility+1 in slotPossibilities[(section*9) + key]:
+							print "slot: " + str((section*9) + key)
+							print "possibility: " + str(possibility+1)
+							sudokuArrayCopy[(section*9) + key] = possibility+1
+							print sudokuArrayCopy
+							#*****
+							line = ""
+							counter = 0
+							for i in sudokuArrayCopy:
+								line = line + str(i)
+								counter +=1
+							print line
+
+			if 1 in squareSingles:
 				print "squareSingles"
 				print squareSingles
 				flag = True
-				for single in squareSingles:
+				possibilities =[i for i, x in enumerate(squareSingles) if x == 1]
+				print "possilbiites: " + str(possibilities)
+				for possibility in possibilities:
 					for key in xrange(0,9):
-						if single in slotPossibilities[first+(key%3)+((key/3*9))]:
+						if possibility+1 in slotPossibilities[first+(key%3)+((key/3*9))]:
 							print first+(key%3)+((key/3*9))
-							print single
-							sudokuArrayCopy[first+(key%3)+((key/3*9))] = single
+							print str(possibility+1)
+							sudokuArrayCopy[first+(key%3)+((key/3*9))] = possibility+1
+							print sudokuArrayCopy
+							#*****
+							line = ""
+							counter = 0
+							for i in sudokuArrayCopy:
+								line = line + str(i)
+								counter +=1
+							print line
+
 		return [flag, sudokuArrayCopy]						
-
-
 
 
 
