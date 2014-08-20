@@ -1,5 +1,11 @@
 #generates a random sudoku puzzle
 
+
+
+#****to Check
+#which functions need self
+#implement find possibilities in unique solution
+
 import random
 import time
 import cProfile
@@ -34,9 +40,8 @@ class PuzzleGenerator():
 	def checkValidNumber(self, current, slot, sudokuArrayCopy):
 		#finds the column number of the current slot
 		col = slot % 9
-		row = slot/9
 		#finds whether its the 1st 2nd or 3rd col or row in the square
-		rowMod = row%3
+		rowMod = (slot/9)%3
 		colMod = col%3
 		#finds the upper left slot of the square
 		first = slot-colMod-(rowMod*9)
@@ -50,7 +55,7 @@ class PuzzleGenerator():
 			#checks current against all numbers in the row
 			if sudokuArrayCopy[key] == current:
 				return False
-		#checks square lower 4 square
+		#checks square 
 		for i in xrange(0,3):
 			for j in xrange(0,3):
 				key = first+j+(i*9)
@@ -164,7 +169,6 @@ class PuzzleGenerator():
 			slot += 2
 		self.puzzleStatistics()	
 
-
 	def leftToRightTopToBottomDig(self):
 		slot = 0
 		print "0"
@@ -184,9 +188,7 @@ class PuzzleGenerator():
 		for slot in slotList:
 			previousAltered.append((slot, self.sudokuArray[slot]))
 			self.sudokuArray[slot] = 0
-		sudokuArrayCopy = []
-		for number in self.sudokuArray:
-			sudokuArrayCopy.append(number)
+		sudokuArrayCopy = list(self.sudokuArray)
 		print "to check: " 
 		self.printResult()
 		if self.uniqueSolution(sudokuArrayCopy) == 1:
@@ -196,7 +198,182 @@ class PuzzleGenerator():
 				self.sudokuArray[item[0]] = item[1]
 			return False
 
+#Time to Grade the Puzzle
+#Order of Operations
+#Easy (Show Possibilities, Hidden Singles, Naked Pairs/Triples, Hidden Pairs/Triples,
+	#Naked Quads, Pointing Pairs, Box-Line Reduction)
+#Tough (X-Wing, Simple Coloring, Y-Wing, SwordFish, XYZ Wing)
+#Diabolical (X-Cycles, XY-Chain, 3D Medusa, Jelly-Fish, Uniq Rect, Ext Uniq Rect,
+	#Hidden Unique Rect,WXYZ Wing, Aligned Pair Exclusion)
+#Evil Redic
 	
+	def findDifficulty(self, sudokuArrayCopy):
+		startTime = time.time()
+		slotPossibilities = [range(1,10) for x in range(0,81)]
+		print self.difficultyOrderOfOperations(sudokuArrayCopy, slotPossibilities)
+		print "findDifficulty Time: " + str(time.time()-startTime)
+
+
+	#****************debating whether or not to pursue this method recursively or with
+	#a loop.  thinking a loop as i will be able to avoid passing the difficultly level
+
+	def difficultyOrderOfOperations(self, sudokuArrayCopy, slotPossibilities):	
+		print sudokuArrayCopy
+		print " "
+		#0 if fails, 1 if easy, 2 if med...
+		highestDifficulty = 0
+		slotPossibilities = self.findPossibilities(sudokuArrayCopy, slotPossibilities)
+		#**be able to handle case where this solver doesn't find solution
+		while slotPossibilities.count([]) != len(slotPossibilities):
+			
+			line = ""
+			counter = 0
+			for i in self.sudokuArray:
+				if counter <9:
+					line = line + str(i)
+					counter +=1
+				else:
+					print line
+					line = str(i)
+					counter = 1
+			print line
+
+			print "difficultyLoop"
+			#DIFFICULTY LEVEL 0 SOLUTIONS
+			#slotPossibliites
+			result = self.showPossibilities(sudokuArrayCopy, slotPossibilities)
+			if result[0] == True:
+				sudokuArrayCopy = result[1]
+				slotPossibilities = self.findPossibilities(sudokuArrayCopy, slotPossibilities)
+				continue
+
+			#DIFFICULTY LEVEL 1 SOLUTIONS
+			print "level 1"
+			result = self.hiddenSingles(sudokuArrayCopy, slotPossibilities)
+			if result[0] == True:
+				sudokuArrayCopy = result[1]
+				highestDifficulty = 1
+				slotPossibilities = self.findPossibilities(sudokuArrayCopy, slotPossibilities)
+				continue
+
+		print sudokuArrayCopy
+		return highestDifficulty
+
+	#do this by going through on cells that have a number, remove as a possibility from all in
+	#same col, row and square
+	def findPossibilities(self, sudokuArrayCopy, slotPossibilities):
+		#startTime = time.time()
+		for slot in xrange(0,81):
+			if sudokuArrayCopy[slot] != 0:
+				slotPossibilities[slot] = []
+				col = slot % 9
+				rowMod = (slot/9)%3
+				colMod = col%3
+				for key in xrange(0,9):
+					#check col
+					if sudokuArrayCopy[slot] in slotPossibilities[col+(key*9)]:
+						slotPossibilities[col+(key*9)].remove(sudokuArrayCopy[slot])
+					#check row
+					if sudokuArrayCopy[slot] in slotPossibilities[slot-col+key]:
+						slotPossibilities[slot-col+key].remove(sudokuArrayCopy[slot])
+					#checkSquare
+					first = slot-colMod-(rowMod*9)
+					if sudokuArrayCopy[slot] in slotPossibilities[first+(key%3)+((key/3*9))]:
+						slotPossibilities[first+(key%3)+((key/3*9))].remove(sudokuArrayCopy[slot])
+		#print "Possibility Time: " + str(time.time()-startTime)
+		return slotPossibilities
+
+	def showPossibilities(self, sudokuArrayCopy, slotPossibilities):
+		print "showPossibilities"
+		#monitors whether or not anything was changed
+		flag = False
+		for slot, possibility in enumerate(slotPossibilities):
+			if len(possibility) == 1:
+				flag = True
+				sudokuArrayCopy[slot] = possibility[0]
+		return [flag, sudokuArrayCopy]
+
+	#*******Major Bugs
+	#bug in appending and removing and appending signles need to just count	
+	def hiddenSingles(self, sudokuArrayCopy, slotPossibilities):
+		print "hiddenSingles"
+		#have array of ones found and slot, if found second time remove
+		flag = False
+		for section in xrange(0,9):
+			colSingles = []
+			rowSingles = []
+			squareSingles = []
+			#squares left to right then top to bottom
+			first = (section%3)*3 + (section/3)*27
+
+			for key in xrange(0,9):
+				#column
+				for possibility in slotPossibilities[section+(key*9)]:
+					if possibility not in colSingles:
+						colSingles.append(possibility)
+					else:
+						colSingles.remove(possibility)
+				#row
+				for possibility in slotPossibilities[(section*9) + key]:
+					if possibility not in rowSingles:
+						rowSingles.append(possibility)
+					else:
+						rowSingles.remove(possibility)
+				#squares left to right then top to bottom
+				for possibility in slotPossibilities[first+(key%3)+((key/3*9))]:
+					if possibility not in squareSingles:
+						squareSingles.append(possibility)
+					else:
+						squareSingles.remove(possibility)
+			if len(colSingles) > 0:
+				print slotPossibilities
+				print "colSingles"
+				print colSingles
+				flag = True
+				for single in colSingles:
+					for key in xrange(0,9):
+						if single in slotPossibilities[section+(key*9)]:
+							print section+(key*9)
+							print single
+							sudokuArrayCopy[section+(key*9)] = single
+			line = ""
+			counter = 0
+			for i in self.sudokuArray:
+				if counter <9:
+					line = line + str(i)
+					counter +=1
+				else:
+					print line
+					line = str(i)
+					counter = 1
+			print line
+
+			if len(rowSingles) > 0:
+				print "rowSingles"
+				print rowSingles
+				flag = True
+				for single in rowSingles:
+					for key in xrange(0,9):
+						if single in slotPossibilities[(section*9) + key]:
+							print (section*9) + key
+							print single
+							sudokuArrayCopy[(section*9) + key] = single
+			if len(squareSingles) > 0:
+				print "squareSingles"
+				print squareSingles
+				flag = True
+				for single in squareSingles:
+					for key in xrange(0,9):
+						if single in slotPossibilities[first+(key%3)+((key/3*9))]:
+							print first+(key%3)+((key/3*9))
+							print single
+							sudokuArrayCopy[first+(key%3)+((key/3*9))] = single
+		return [flag, sudokuArrayCopy]						
+
+
+
+
+
 	def puzzleStatistics(self):
 		self.printResult()
 		count = 0
@@ -204,6 +381,7 @@ class PuzzleGenerator():
 			if slot != 0:
 				count += 1
 		print "Filled Values: " + str(count)
+		print self.findDifficulty(list(self.sudokuArray))
 		#boxes
 		#row, col = 0
 		#while row <3:
@@ -242,8 +420,8 @@ def main():
 	#digHolesCheck()
 	#testCase()
 
-	#randomizeCheck()
-	jumpOneSlotCheck()
+	randomizeCheck()
+	#jumpOneSlotCheck()
 	#leftToRightCheck()
 	#jumpLeftCheck()
 	#randomLeft()
@@ -282,9 +460,7 @@ def multipleSolutionCheck():
 def digHolesCheck():
 	PuzzleGen = PuzzleGenerator()
 	sudokuArray = PuzzleGen.generateCompleted()
-	sudokuArrayCopy = []
-	for number in sudokuArray:
-		sudokuArrayCopy.append(number)
+	sudokuArrayCopy = list(sudokuArray)
 	for x in xrange(0,80,2):
 		mult = PuzzleGen.digHoles([x, x+1], sudokuArrayCopy)
 		print mult
