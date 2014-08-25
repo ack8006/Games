@@ -1,10 +1,10 @@
 #SudokuSolver
 #Alex Takata
-#7/27/2014
+#8/25/2014
  
 #when started, the program will prompt the user for a text file of the sudoku
-#puzzle.  The text file can be formatted either in a continuous string of digits
-#row by row, or in 9 lines.
+#puzzle.  The text file can be formatted either in a 
+#continuous string of digits row by row, or in 9 lines.
 #If there is a solution the program will print it.  If there is no solution the program 
 #will state that there is no valid solution and prompt for another file. If
 #there are multiple solution the program will state that and prompt for another
@@ -36,7 +36,12 @@ def parseFile(sudokuFile):
 				aLine = aLine.replace(" ","")
 				#adds all numbers to the array
 				for i in xrange(0,len(aLine)):
-					sudokuArray.append(int(aLine[i]))
+					#will try to append the character as an int, but if it can't will except and exit
+					try:
+						sudokuArray.append(int(aLine[i]))
+					except ValueError:
+						print "File Contains non-integer values"
+						exit()
 		if len(sudokuArray) == 81:
 			return sudokuArray
 		else:
@@ -45,22 +50,40 @@ def parseFile(sudokuFile):
 	else: 
 		print "File Does Not Exist"
 		main()
- 
+
 def sudokuSolver(sudokuArray):
+	#worst case performance for the brute force solver is a puzzle where clues are heavily loaded to one side
+	#as the solver doesn't look forward.  to speed it up will start from more crowded half of puzzle
+	topCount = 0
+	bottomCount = 0
+	for slot in xrange(0,80):
+		if slot < 40 and sudokuArray[slot] != 0:
+			topCount += 1
+		elif slot > 40 and sudokuArray[slot] != 0:
+			bottomCount += 1
+	#sets the program to begin either from the first slot and move down or last slot and move up
+	sideOperator = 0
+	#current index of the array
+	slot = 0
+	if topCount >= bottomCount:
+		slot = 0
+		sideOperator = 1
+	else:
+		slot = 80
+		sideOperator = -1
+
 	#stores solved puzzle so sudoku array can be used to check for multiple solutions
 	solvedPuzzle = []
 	#counts number of valid solutions
 	numberOfSolutions = 0
-	#current index of array
-	slot = 0 
 	#will hold tuple of slot and previously tried number
 	previousAltered = []
 	#boolean to know if made a mistake and need to backtrack
 	goBack = True
 	#variable to track where trial numbers should begin from, important when backtracking
 	currentStart = 1
-	#while program is unfinished
-	while slot < len(sudokuArray):
+	#while program is unfinished checks for both direction base case end
+	while slot < 81 and slot >=0:
 		#if the current slot is blank
 		if sudokuArray[slot] == 0:
 			#try to fit in a number between the current start and 9 inclusive
@@ -73,20 +96,21 @@ def sudokuSolver(sudokuArray):
 					if not 0 in sudokuArray:
 						#increment number of solutions
 						numberOfSolutions += 1
-						#if first, store in solved puzzle and move on
+						#if first solution, make copy in solvedPuzzle and move on
 						if numberOfSolutions == 1:
 							solvedPuzzle = list(sudokuArray)
 						#if more than 1 solution exits to main and reports problem
 						elif numberOfSolutions >1:
 							print "Puzzle Has More Than One Solution"
-							main()
+							exit()
 						#program continues to look for solutions by backtracking
 						sudokuArray[slot] = 0
 					else:
 						#the insertion is tracked by adding a tuple of the slot and number
 						# to the previouslyAltered Array
 						previousAltered.append((slot, i))
-						slot +=1
+						#either 1 or -1 based on direction of solving
+						slot += sideOperator
 						currentStart=1
 						#number found that fits, don't need to go back
 						goBack = False
@@ -101,8 +125,10 @@ def sudokuSolver(sudokuArray):
 						print "Puzzle has a unique solution"
 						return solvedPuzzle
 					else: 
-						print "Puzzle has no valid solution"
-						main()
+						#if there is already a solved puzzle then the puzzle was solved when given
+						if not solvedPuzzle:
+							print "Puzzle has no valid solution"
+						exit()
 				else:
 					last = previousAltered.pop()
 					#sets slot to the previously altered slot and set current start to 
@@ -115,18 +141,16 @@ def sudokuSolver(sudokuArray):
 			else: goBack = True
 		#if the current slot is not zero go to the next slot
 		else:
-			slot +=1
+			slot += sideOperator
 	print "Puzzle Is Already Solved"
 	return sudokuArray
- 
  
 #checks the trial entry in a particular slot to see if the rol, col, and box requirements are met
 def checkValidNumber(sudokuArray, current, slot):
 	#finds the column number of the current slot
 	col = slot % 9
-	row = slot/9
 	#finds whether its the 1st 2nd or 3rd col or row in the square
-	rowMod = row%3
+	rowMod = (slot/9)%3
 	colMod = col%3
 	#finds the upper left slot of the square
 	first = slot-colMod-(rowMod*9)
@@ -135,7 +159,7 @@ def checkValidNumber(sudokuArray, current, slot):
 		#checks the current against all numbers in the column
 		if sudokuArray[key] == current:
 			return False
-			#finds all slots that correspond to the same row
+	#finds all slots that correspond to the same row
 	for key in xrange(slot-col, slot-col+9):
 		#checks current against all numbers in the row
 		if sudokuArray[key] == current:
@@ -160,7 +184,6 @@ def printResult(solvedArray):
 			line = str(i)
 			counter = 1
 	print line
- 
  
 if __name__ == "__main__":
     main()
