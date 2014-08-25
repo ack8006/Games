@@ -35,7 +35,7 @@ def parseFile(sudokuFile):
 				aLine = aLine.replace("\n","")
 				aLine = aLine.replace(" ","")
 				#adds all numbers to the array
-				for i in range(0,len(aLine)):
+				for i in xrange(0,len(aLine)):
 					sudokuArray.append(int(aLine[i]))
 		if len(sudokuArray) == 81:
 			return sudokuArray
@@ -64,7 +64,7 @@ def sudokuSolver(sudokuArray):
 		#if the current slot is blank
 		if sudokuArray[slot] == 0:
 			#try to fit in a number between the current start and 9 inclusive
-			for i in range(currentStart,10):
+			for i in xrange(currentStart,10):
 				#checks the trial number to see if it passes the three sudoku critera
 				if checkValidNumber(sudokuArray, i, slot):
 					#if it passes then it is inserted into the array
@@ -131,18 +131,18 @@ def checkValidNumber(sudokuArray, current, slot):
 	#finds the upper left slot of the square
 	first = slot-colMod-(rowMod*9)
 	#finds all of the slots that correspond the the same column
-	for key in range(col, len(sudokuArray), 9):
+	for key in xrange(col, len(sudokuArray), 9):
 		#checks the current against all numbers in the column
 		if sudokuArray[key] == current:
 			return False
 			#finds all slots that correspond to the same row
-	for key in range(slot-col, slot-col+9):
+	for key in xrange(slot-col, slot-col+9):
 		#checks current against all numbers in the row
 		if sudokuArray[key] == current:
 			return False
 	#checks square
-	for i in range(0,3):
-		for j in range(0,3):
+	for i in xrange(0,3):
+		for j in xrange(0,3):
 			key = first+j+(i*9)
 			if sudokuArray[key] == current:
 				return False
