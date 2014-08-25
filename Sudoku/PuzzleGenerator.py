@@ -144,7 +144,7 @@ class PuzzleGenerator():
 	def randomizeDigGlobally(self):
 		#while count less than x?
 		failureCount = 0
-		while failureCount < 2:
+		while failureCount < 3:
 			slot = random.randrange(0,80)
 			if self.sudokuArray[slot] != 0:
 				if not self.digHoles([slot]):
@@ -218,26 +218,18 @@ class PuzzleGenerator():
 	#a loop.  thinking a loop as i will be able to avoid passing the difficultly level
 
 	def difficultyOrderOfOperations(self, sudokuArrayCopy, slotPossibilities):	
+		#*************should implement scoring to determine true difficulty here
 		print sudokuArrayCopy
 		print " "
 		#0 if fails, 1 if easy, 2 if med...
 		highestDifficulty = 0
 		slotPossibilities = self.findPossibilities(sudokuArrayCopy, slotPossibilities)
 		#**be able to handle case where this solver doesn't find solution
-		while slotPossibilities.count([]) != len(slotPossibilities):
-			
-			line = ""
-			counter = 0
-			for i in self.sudokuArray:
-				if counter <9:
-					line = line + str(i)
-					counter +=1
-				else:
-					print line
-					line = str(i)
-					counter = 1
-			print line
 
+		#*
+		count = 0
+		#** remove and count < 10
+		while slotPossibilities.count([]) != len(slotPossibilities) and count < 10:
 			print "difficultyLoop"
 			#DIFFICULTY LEVEL 0 SOLUTIONS
 			#slotPossibliites
@@ -245,35 +237,37 @@ class PuzzleGenerator():
 			if result[0] == True:
 				sudokuArrayCopy = result[1]
 				slotPossibilities = self.findPossibilities(sudokuArrayCopy, slotPossibilities)
+				count = 0
 				continue
 
 			#DIFFICULTY LEVEL 1 SOLUTIONS
 			print "level 1"
 
-			#*****
-			line = ""
-			counter = 0
-			for i in sudokuArrayCopy:
-				line = line + str(i)
-				counter +=1
-			print line
-							
 			result = self.hiddenSingles(sudokuArrayCopy, slotPossibilities)
 			if result[0] == True:
 				sudokuArrayCopy = result[1]
 				highestDifficulty = 1
 				slotPossibilities = self.findPossibilities(sudokuArrayCopy, slotPossibilities)
+				count = 0
 				continue
+
+			result = self.nakedDouble(slotPossibilities)
+			if result[0] == True:
+				highestDifficulty = 1
+				slotPossibilities = result[1]
+				count = 0
+				continue
+
+			count +=1
+		print "****************FAILURE OVERCOUNT: " +str(count)
 
 		#*****
 		line = ""
-		counter = 0
-		for i in sudokuArrayCopy:
-			line = line + str(i)
-			counter +=1
+		for x in sudokuArrayCopy:
+			line = line + str(x)
 		print line
-
 		return highestDifficulty
+
 
 	#do this by going through on cells that have a number, remove as a possibility from all in
 	#same col, row and square
@@ -316,7 +310,6 @@ class PuzzleGenerator():
 		#have array of ones found and slot, if found second time remove
 		flag = False
 		for section in xrange(0,9):
-			print "section: " + str(section)
 			#occurances of a possibility
 			colSingles = [0]*9
 			rowSingles = [0]*9
@@ -334,85 +327,100 @@ class PuzzleGenerator():
 				#squares left to right then top to bottom
 				for possibility in slotPossibilities[first+(key%3)+((key/3*9))]:
 					squareSingles[possibility-1] = squareSingles[possibility-1] + 1
+			#****could make these lines a method and pass the slot as a parameter
 			#if any possibility occurs once in the column
 			if 1 in colSingles:
-				print "colSingles"
-				print colSingles
 				flag = True
 				possibilities =[i for i, x in enumerate(colSingles) if x == 1]
-				print "possilbiites: " + str(possibilities)
 				for possibility in possibilities:
 					for key in xrange(0,9):
 						if possibility+1 in slotPossibilities[section+(key*9)]:
-							print section+(key*9)
-							print str(possibility+1)
 							sudokuArrayCopy[section+(key*9)] = possibility+1
-							print sudokuArrayCopy
-							#*****
-							line = ""
-							counter = 0
-							for i in sudokuArrayCopy:
-								line = line + str(i)
-								counter +=1
-							print line
-			line = ""
-			counter = 0
-			for i in self.sudokuArray:
-				if counter <9:
-					line = line + str(i)
-					counter +=1
-				else:
-					print line
-					line = str(i)
-					counter = 1
-			print line
-			print " "
-			self.printResult()
 
 			if 1 in rowSingles:
-				print slotPossibilities
-				print "rowSingles"
-				print rowSingles
 				flag = True
 				possibilities =[i for i, x in enumerate(rowSingles) if x == 1]
-				print "possilbiites: " + str(possibilities)
 				for possibility in possibilities:
 					for key in xrange(0,9):
 						if possibility+1 in slotPossibilities[(section*9) + key]:
-							print "slot: " + str((section*9) + key)
-							print "possibility: " + str(possibility+1)
 							sudokuArrayCopy[(section*9) + key] = possibility+1
-							print sudokuArrayCopy
-							#*****
-							line = ""
-							counter = 0
-							for i in sudokuArrayCopy:
-								line = line + str(i)
-								counter +=1
-							print line
 
 			if 1 in squareSingles:
-				print "squareSingles"
-				print squareSingles
 				flag = True
 				possibilities =[i for i, x in enumerate(squareSingles) if x == 1]
-				print "possilbiites: " + str(possibilities)
 				for possibility in possibilities:
 					for key in xrange(0,9):
 						if possibility+1 in slotPossibilities[first+(key%3)+((key/3*9))]:
-							print first+(key%3)+((key/3*9))
-							print str(possibility+1)
 							sudokuArrayCopy[first+(key%3)+((key/3*9))] = possibility+1
-							print sudokuArrayCopy
-							#*****
-							line = ""
-							counter = 0
-							for i in sudokuArrayCopy:
-								line = line + str(i)
-								counter +=1
-							print line
 
 		return [flag, sudokuArrayCopy]						
+
+	#returns slot possibilities instead of sudoku
+	def nakedDouble(self, slotPossibilities):
+		#two cells in same group have 2possibilites, other can be removed
+		print "nakedDouble"
+		flag = False
+		for x in xrange(0,81):
+			#remove values from the below conditions
+			col = False
+			row = False
+			square = False
+			#check all others and see if matches col row and square
+			if len(slotPossibilities[x]) == 2 and slotPossibilities.count(slotPossibilities[x]) > 1:
+				#finds all locations of occurances of the current slot possiblity
+				occurances = [i for i, val in enumerate(slotPossibilities) if val == slotPossibilities[x]]
+				for occurance in occurances:
+					if x != occurance:
+						if x % 9 == occurance % 9:
+							col = True
+						if x/9 == occurance / 9:
+							row = True
+						if x-(x%3)-(((x/9)%3)*9) == occurance-(occurance%3)-(((occurance/9)%3)*9):
+							square = True
+			#**could be function
+			if col:
+				flag = True
+				for key in xrange(0,9):
+					if slotPossibilities[x] != slotPossibilities[(key*9)+(x%9)]:
+						slotPossibilities[(key*9)+(x%9)] = list(set(slotPossibilities[(key*9)+(x%9)]) - set(slotPossibilities[x]))
+						slotPossibilities[(key*9)+(x%9)].sort()
+			if row:
+				flag = True
+				for key in xrange(0,9):
+					if slotPossibilities[x] != slotPossibilities[(x/9)*9+key]:
+						slotPossibilities[(x/9)*9+key] = list(set(slotPossibilities[(x/9)*9+key]) - set(slotPossibilities[x]))
+						slotPossibilities[(x/9)*9+key].sort()
+			if square:
+				flag = True
+				#finds the upper left slot of the square
+				first = x-(x%3)-(((x/9)%3)*9)
+				for key in xrange(0,9):
+					if slotPossibilities[x] != slotPossibilities[first+(key%3)+((key/3*9))]:
+						slotPossibilities[first+(key%3)+((key/3*9))] = list(set(slotPossibilities[first+(key%3)+((key/3*9))]) - set(slotPossibilities[x]))
+						slotPossibilities[first+(key%3)+((key/3*9))].sort()
+
+		return [flag, slotPossibilities]
+
+
+
+
+
+
+
+
+
+
+
+	def hiddenDouble(self, slotPossibilities):
+		pass
+
+
+
+
+
+
+
+
 
 
 
@@ -444,6 +452,7 @@ class PuzzleGenerator():
 		print line
 
 #random tests
+#*****to remove
 	def tester(self, sudokuArrayCopy):
 		sudokuArrayCopy[0]="a"
 		print self.sudokuArray
