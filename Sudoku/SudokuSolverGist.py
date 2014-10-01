@@ -50,7 +50,7 @@ def parseFile(sudokuFile):
 	else: 
 		print "File Does Not Exist"
 		main()
- 
+
 def sudokuSolver(sudokuArray):
 	#worst case performance for the brute force solver is a puzzle where clues are heavily loaded to one side
 	#as the solver doesn't look forward.  to speed it up will start from more crowded half of puzzle
@@ -71,7 +71,11 @@ def sudokuSolver(sudokuArray):
 	else:
 		slot = 80
 		sideOperator = -1
+<<<<<<< HEAD
  
+=======
+
+>>>>>>> abebc1d43f2638b89e081536f3b05c55cb39c73f
 	#stores solved puzzle so sudoku array can be used to check for multiple solutions
 	solvedPuzzle = []
 	#counts number of valid solutions
