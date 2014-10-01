@@ -1,0 +1,43 @@
+Generate Completed Puzzle
+	- generateCompleted
+	- checkValidNumber
+	- 
+
+DigHoles
+	- uniqueSolution
+		- checkValidNumber
+	- digHoles
+	- randomizeDigGlobally
+	- leftToRightTopToBottomDig
+
+Measure Difficulty
+
+
+
+generateCompleted
+randomizeDigGlobally
+leftToRightTopToBottomDig
+digHoles
+checkValidNumber
+uniqueSolution
+
+puzzleStatistics
+printResult
+
+TestCases
+
+
+
+Notes:
+
+#1 is easy, 2 medium, 3 hard, 4 very hard
+	#easy >32, 30-32,28-30,<28
+	#>1 each box, couple with only one given, """", several with no givens
+	#each digit appears at least 3 times, some may only appear twice, 3-4 appear twice 1 once, 
+	#several single digit and most 2-3
+	#http://alwayspuzzling.blogspot.com/2012/12/how-to-judge-difficulty-of-sudoku.html
+	#def difficultyGenerator(self, difficulty):
+	#	#copy array
+	#	sudokuArrayCopy = []
+	#	for slot in self.sudokuArray:
+	#		sudokuArrayCopy.append(slot)
